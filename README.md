@@ -33,11 +33,11 @@ npm run dev
 
 ## Scripts
 
-npm run dev      # start
-npm run build    # production build
-npm run start    # run custom server
-npm run lint     # lint code
-npm run test     # Integration tests
+- **`npm run dev`** – Start.
+- **`npm run build`** – Production build.
+- **`npm run start`** – Start the production server.
+- **`npm run lint`** – Run ESLint.
+- **`npm run test`** – Run integration tests.
 
 
 ## Submission checklist (completed points)

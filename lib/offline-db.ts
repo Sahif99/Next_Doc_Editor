@@ -13,6 +13,7 @@ export interface OfflineDocument {
 
 export interface OfflineQueueItem {
   id?: number;
+  operation?: "create" | "update";
   operationId: string;
   documentId: string;
   title: string;
@@ -40,6 +41,10 @@ class NextDocsOfflineDB extends Dexie {
     this.version(2).stores({
       documents: "id, updatedAt",
       queue: "++id, documentId, status, nextAttemptAt, createdAt, operationId",
+    });
+    this.version(3).stores({
+      documents: "id, updatedAt",
+      queue: "++id, operation, documentId, status, nextAttemptAt, createdAt, operationId",
     });
   }
 }

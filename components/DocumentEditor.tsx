@@ -86,6 +86,7 @@ export function DocumentEditor({
       const now = new Date().toISOString();
 
       await offlineDB.queue.add({
+        operation: "update",
         operationId: crypto.randomUUID(),
         documentId: document.id,
         title: nextTitle,
@@ -192,7 +193,7 @@ export function DocumentEditor({
     if (!navigator.onLine) return;
 
     const queued = (await offlineDB.queue.where({ documentId: document.id }).sortBy("createdAt"))
-      .filter((item) => item.status !== "conflict");
+      .filter((item) => item.status !== "conflict" && item.operation !== "create");
 
     if (queued.length === 0) return;
 

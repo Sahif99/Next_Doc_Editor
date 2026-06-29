@@ -1,0 +1,884 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Next Docs - Full Code Flow Guide</title>
+    <style>
+      @page {
+        size: A4;
+        margin: 18mm 15mm;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        color: #111827;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 12px;
+        line-height: 1.45;
+        margin: 0;
+      }
+
+      h1,
+      h2,
+      h3 {
+        color: #0f172a;
+        line-height: 1.18;
+        margin: 0 0 8px;
+      }
+
+      h1 {
+        font-size: 30px;
+      }
+
+      h2 {
+        border-bottom: 1px solid #cbd5e1;
+        font-size: 19px;
+        margin-top: 24px;
+        padding-bottom: 5px;
+      }
+
+      h3 {
+        font-size: 15px;
+        margin-top: 14px;
+      }
+
+      p {
+        margin: 0 0 8px;
+      }
+
+      ul,
+      ol {
+        margin: 6px 0 10px 20px;
+        padding: 0;
+      }
+
+      li {
+        margin: 3px 0;
+      }
+
+      code {
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        border-radius: 4px;
+        color: #0f172a;
+        font-family: Consolas, "Courier New", monospace;
+        font-size: 11px;
+        padding: 1px 4px;
+      }
+
+      table {
+        border-collapse: collapse;
+        margin: 8px 0 16px;
+        page-break-inside: auto;
+        width: 100%;
+      }
+
+      th,
+      td {
+        border: 1px solid #cbd5e1;
+        padding: 6px 7px;
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        background: #e2e8f0;
+        color: #0f172a;
+        font-weight: 700;
+      }
+
+      tr {
+        page-break-inside: avoid;
+      }
+
+      .cover {
+        border: 2px solid #0f172a;
+        margin-bottom: 18px;
+        padding: 24px;
+      }
+
+      .subtitle {
+        color: #475569;
+        font-size: 15px;
+        margin-top: 8px;
+      }
+
+      .meta {
+        color: #475569;
+        margin-top: 20px;
+      }
+
+      .callout {
+        background: #f8fafc;
+        border-left: 4px solid #2563eb;
+        margin: 10px 0 14px;
+        padding: 10px 12px;
+      }
+
+      .flow {
+        background: #f8fafc;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        font-family: Consolas, "Courier New", monospace;
+        font-size: 11px;
+        line-height: 1.5;
+        margin: 8px 0 14px;
+        padding: 10px;
+        white-space: pre-wrap;
+      }
+
+      .page-break {
+        page-break-before: always;
+      }
+    </style>
+  </head>
+  <body>
+    <section class="cover">
+      <h1>Next Docs - Full Code Flow Guide</h1>
+      <p class="subtitle">
+        Project explanation, file connections, feature answers, code flow, and used skills for the
+        Next.js collaborative document editor.
+      </p>
+      <p class="meta">
+        Workspace: <code>C:\Users\DELL\next-doc-editor</code><br />
+        Prepared date: 2026-06-28<br />
+        Verification: <code>npm run test</code> passed, <code>npm run lint</code> passed.
+      </p>
+    </section>
+
+    <h2>1. Project Summary</h2>
+    <p>
+      <strong>Next Docs</strong> is a local-first collaborative document editor. It allows users to
+      register, log in, create documents, edit rich text, autosave changes, invite collaborators,
+      work offline, resolve conflicts, restore old versions, and see realtime collaborator updates.
+    </p>
+    <p>
+      The application uses the Next.js App Router for pages and API routes, MongoDB with Mongoose
+      for persistent data, NextAuth credentials login for authentication, Socket.IO for realtime
+      document room updates, Dexie/IndexedDB for offline storage, and Zod for input validation.
+    </p>
+
+    <h2>2. Technology Stack And Skills Used</h2>
+    <table>
+      <tr>
+        <th>Area</th>
+        <th>Technology / Skill</th>
+        <th>Where It Appears</th>
+        <th>Purpose</th>
+      </tr>
+      <tr>
+        <td>Frontend</td>
+        <td>Next.js 16 App Router, React 19, TypeScript</td>
+        <td><code>app/</code>, <code>components/</code>, <code>hooks/</code></td>
+        <td>Pages, client components, editor UI, dashboard UI, typed application code.</td>
+      </tr>
+      <tr>
+        <td>Styling</td>
+        <td>Tailwind CSS 4</td>
+        <td><code>app/globals.css</code>, component class names</td>
+        <td>Responsive layout, cards, forms, rich editor styling, application theme.</td>
+      </tr>
+      <tr>
+        <td>Authentication</td>
+        <td>NextAuth credentials, JWT sessions, bcryptjs</td>
+        <td><code>lib/auth.ts</code>, <code>app/api/auth/[...nextauth]/route.ts</code></td>
+        <td>Email/password login and server-side session access.</td>
+      </tr>
+      <tr>
+        <td>Database</td>
+        <td>MongoDB, Mongoose</td>
+        <td><code>lib/mongodb.ts</code>, <code>models/</code></td>
+        <td>User, document, collaborator, and version storage.</td>
+      </tr>
+      <tr>
+        <td>Validation</td>
+        <td>Zod</td>
+        <td><code>validators/auth.ts</code>, <code>validators/document.ts</code></td>
+        <td>Registration, document, invite, and update input validation.</td>
+      </tr>
+      <tr>
+        <td>Realtime</td>
+        <td>Socket.IO</td>
+        <td><code>server.js</code>, <code>hooks/useSocket.ts</code></td>
+        <td>Document rooms, live updates, collaborator presence, room join/leave events.</td>
+      </tr>
+      <tr>
+        <td>Offline-first</td>
+        <td>Dexie, IndexedDB, service worker</td>
+        <td><code>lib/offline-db.ts</code>, <code>public/sw.js</code></td>
+        <td>Local document cache, queued saves, offline fallback editor page.</td>
+      </tr>
+      <tr>
+        <td>Email</td>
+        <td>Nodemailer SMTP</td>
+        <td><code>lib/email.ts</code></td>
+        <td>Optional collaborator invitation emails.</td>
+      </tr>
+      <tr>
+        <td>Testing</td>
+        <td>Node test runner, tsx</td>
+        <td><code>tests/</code></td>
+        <td>Unit and integration-style checks for permissions, text parsing, and conflicts.</td>
+      </tr>
+    </table>
+
+    <h2>3. High-Level Architecture</h2>
+    <div class="flow">Browser UI
+  -> Next.js pages in app/
+  -> Client components in components/
+  -> API routes in app/api/
+  -> Session helpers in lib/session.ts
+  -> Permission helpers in lib/permissions.ts
+  -> Mongoose models in models/
+  -> MongoDB
+
+Realtime path:
+Browser DocumentEditor -> useSocket -> server.js Socket.IO room -> other browser clients
+
+Offline path:
+DocumentEditor -> Dexie IndexedDB queue -> syncQueue -> PATCH /api/documents/[id]</div>
+
+    <h2>4. Folder-Level Responsibility</h2>
+    <table>
+      <tr>
+        <th>Folder / File</th>
+        <th>Responsibility</th>
+      </tr>
+      <tr>
+        <td><code>app/</code></td>
+        <td>Next.js App Router pages, layouts, protected pages, and API route handlers.</td>
+      </tr>
+      <tr>
+        <td><code>components/</code></td>
+        <td>Reusable React UI and feature components such as auth form, dashboard, editor, side panels.</td>
+      </tr>
+      <tr>
+        <td><code>hooks/</code></td>
+        <td>Client hooks for Socket.IO connection and debounced autosave behavior.</td>
+      </tr>
+      <tr>
+        <td><code>lib/</code></td>
+        <td>Core business helpers: auth, DB connection, sessions, permissions, serializers, conflicts, security, email, offline DB.</td>
+      </tr>
+      <tr>
+        <td><code>models/</code></td>
+        <td>Mongoose schemas for users, documents, collaborators, and versions.</td>
+      </tr>
+      <tr>
+        <td><code>validators/</code></td>
+        <td>Zod schemas used by API routes before writing data.</td>
+      </tr>
+      <tr>
+        <td><code>types/</code></td>
+        <td>Shared TypeScript interfaces and NextAuth session/JWT augmentation.</td>
+      </tr>
+      <tr>
+        <td><code>utils/</code></td>
+        <td>Small utility helpers such as avatar generation.</td>
+      </tr>
+      <tr>
+        <td><code>public/</code></td>
+        <td>Service worker and offline fallback HTML page.</td>
+      </tr>
+      <tr>
+        <td><code>tests/</code></td>
+        <td>Automated tests for important logic.</td>
+      </tr>
+      <tr>
+        <td><code>server.js</code></td>
+        <td>Custom Next.js HTTP server plus Socket.IO server.</td>
+      </tr>
+      <tr>
+        <td><code>proxy.ts</code></td>
+        <td>Route guard that redirects unauthenticated users away from protected pages.</td>
+      </tr>
+    </table>
+
+    <h2>5. Runtime Startup Flow</h2>
+    <ol>
+      <li><code>npm run dev</code> runs <code>node server.js</code>.</li>
+      <li><code>server.js</code> creates a custom HTTP server and attaches Next.js request handling.</li>
+      <li><code>server.js</code> also creates a Socket.IO server at <code>/api/socket</code>.</li>
+      <li>Browser requests are handled by Next.js pages/API routes.</li>
+      <li>Realtime editor events are handled by Socket.IO rooms in <code>server.js</code>.</li>
+    </ol>
+
+    <h2>6. Route And Page Flow</h2>
+    <table>
+      <tr>
+        <th>Route</th>
+        <th>File</th>
+        <th>Main Logic</th>
+        <th>Connected Files</th>
+      </tr>
+      <tr>
+        <td><code>/</code></td>
+        <td><code>app/page.tsx</code></td>
+        <td>Landing page with links to register and login.</td>
+        <td><code>components/Navbar.tsx</code></td>
+      </tr>
+      <tr>
+        <td><code>/login</code></td>
+        <td><code>app/login/page.tsx</code></td>
+        <td>Shows login form.</td>
+        <td><code>components/AuthForm.tsx</code>, <code>components/Navbar.tsx</code></td>
+      </tr>
+      <tr>
+        <td><code>/register</code></td>
+        <td><code>app/register/page.tsx</code></td>
+        <td>Shows registration form.</td>
+        <td><code>components/AuthForm.tsx</code>, <code>components/Navbar.tsx</code></td>
+      </tr>
+      <tr>
+        <td><code>/dashboard</code></td>
+        <td><code>app/dashboard/page.tsx</code></td>
+        <td>Requires session, queries accessible documents, serializes them for client UI.</td>
+        <td><code>lib/session.ts</code>, <code>lib/mongodb.ts</code>, <code>models/Document.ts</code>, <code>lib/permissions.ts</code>, <code>lib/serializers.ts</code>, <code>components/DashboardClient.tsx</code></td>
+      </tr>
+      <tr>
+        <td><code>/documents/[id]</code></td>
+        <td><code>app/documents/[id]/page.tsx</code></td>
+        <td>Requires session, loads accessible document, returns not found if unavailable, passes data to editor.</td>
+        <td><code>components/DocumentEditor.tsx</code>, <code>lib/session.ts</code>, <code>lib/permissions.ts</code>, <code>lib/serializers.ts</code></td>
+      </tr>
+      <tr>
+        <td>Not found</td>
+        <td><code>app/not-found.tsx</code></td>
+        <td>Friendly fallback when document is missing or access is denied.</td>
+        <td><code>components/Navbar.tsx</code></td>
+      </tr>
+    </table>
+
+    <h2>7. API Route Flow</h2>
+    <table>
+      <tr>
+        <th>API</th>
+        <th>Methods</th>
+        <th>File</th>
+        <th>Logic</th>
+      </tr>
+      <tr>
+        <td><code>/api/auth/register</code></td>
+        <td>POST</td>
+        <td><code>app/api/auth/register/route.ts</code></td>
+        <td>Rate limits, reads limited JSON, validates registration, checks duplicate user, hashes password, creates user with avatar.</td>
+      </tr>
+      <tr>
+        <td><code>/api/auth/[...nextauth]</code></td>
+        <td>GET, POST</td>
+        <td><code>app/api/auth/[...nextauth]/route.ts</code></td>
+        <td>Delegates auth requests to NextAuth using <code>lib/auth.ts</code>.</td>
+      </tr>
+      <tr>
+        <td><code>/api/documents</code></td>
+        <td>GET</td>
+        <td><code>app/api/documents/route.ts</code></td>
+        <td>Requires API user, builds accessible document query, optionally searches by title/content, serializes results.</td>
+      </tr>
+      <tr>
+        <td><code>/api/documents</code></td>
+        <td>POST</td>
+        <td><code>app/api/documents/route.ts</code></td>
+        <td>Validates title, creates document, adds owner collaborator, creates initial version.</td>
+      </tr>
+      <tr>
+        <td><code>/api/documents/[id]</code></td>
+        <td>GET</td>
+        <td><code>app/api/documents/[id]/route.ts</code></td>
+        <td>Loads one accessible document and serializes it.</td>
+      </tr>
+      <tr>
+        <td><code>/api/documents/[id]</code></td>
+        <td>PATCH</td>
+        <td><code>app/api/documents/[id]/route.ts</code></td>
+        <td>Checks edit permission, validates update, sanitizes HTML, checks revision conflict, saves revision, optionally creates version.</td>
+      </tr>
+      <tr>
+        <td><code>/api/documents/[id]</code></td>
+        <td>DELETE</td>
+        <td><code>app/api/documents/[id]/route.ts</code></td>
+        <td>Only owner can delete. Deletes versions, then deletes document.</td>
+      </tr>
+      <tr>
+        <td><code>/api/documents/[id]/collaborators</code></td>
+        <td>POST</td>
+        <td><code>app/api/documents/[id]/collaborators/route.ts</code></td>
+        <td>Only owner can invite/update collaborator role. Finds registered user and optionally sends SMTP invite email.</td>
+      </tr>
+      <tr>
+        <td><code>/api/documents/[id]/collaborators</code></td>
+        <td>DELETE</td>
+        <td><code>app/api/documents/[id]/collaborators/route.ts</code></td>
+        <td>Only owner can remove a non-owner collaborator.</td>
+      </tr>
+      <tr>
+        <td><code>/api/documents/[id]/versions</code></td>
+        <td>GET</td>
+        <td><code>app/api/documents/[id]/versions/route.ts</code></td>
+        <td>Lists latest 50 versions for an accessible document.</td>
+      </tr>
+      <tr>
+        <td><code>/api/documents/[id]/versions/[versionId]/restore</code></td>
+        <td>POST</td>
+        <td><code>app/api/documents/[id]/versions/[versionId]/restore/route.ts</code></td>
+        <td>Editor/owner can restore old version. Creates a new version labelled restored.</td>
+      </tr>
+      <tr>
+        <td><code>/api/test-db</code></td>
+        <td>GET</td>
+        <td><code>app/api/test-db/route.ts</code></td>
+        <td>Simple MongoDB connection health check.</td>
+      </tr>
+    </table>
+
+    <div class="page-break"></div>
+    <h2>8. File Connection Map</h2>
+    <table>
+      <tr>
+        <th>File</th>
+        <th>Connects To</th>
+        <th>Reason</th>
+      </tr>
+      <tr>
+        <td><code>app/layout.tsx</code></td>
+        <td><code>app/globals.css</code>, <code>components/Providers.tsx</code>, <code>components/Footer.tsx</code>, <code>components/ServiceWorkerRegister.tsx</code></td>
+        <td>Wraps all pages with global CSS, auth provider, toast provider, service worker registration, and footer.</td>
+      </tr>
+      <tr>
+        <td><code>components/Providers.tsx</code></td>
+        <td><code>next-auth/react</code>, <code>react-hot-toast</code></td>
+        <td>Makes session state and toast notifications available to client components.</td>
+      </tr>
+      <tr>
+        <td><code>proxy.ts</code></td>
+        <td><code>next-auth/jwt</code></td>
+        <td>Checks token before protected page access and redirects login/register users correctly.</td>
+      </tr>
+      <tr>
+        <td><code>components/AuthForm.tsx</code></td>
+        <td><code>/api/auth/register</code>, <code>signIn("credentials")</code></td>
+        <td>Registers new users, then logs in through NextAuth credentials.</td>
+      </tr>
+      <tr>
+        <td><code>lib/auth.ts</code></td>
+        <td><code>lib/mongodb.ts</code>, <code>models/User.ts</code>, <code>bcryptjs</code></td>
+        <td>Credentials authorize function finds user and compares password hash.</td>
+      </tr>
+      <tr>
+        <td><code>lib/session.ts</code></td>
+        <td><code>lib/auth.ts</code></td>
+        <td>Gets server session and exposes <code>requireUser</code> / <code>requireApiUser</code>.</td>
+      </tr>
+      <tr>
+        <td><code>components/DashboardClient.tsx</code></td>
+        <td><code>/api/documents</code>, <code>/api/documents/[id]</code>, <code>lib/client-api.ts</code>, <code>lib/text.ts</code>, <code>components/ConfirmDialog.tsx</code></td>
+        <td>Creates, searches, opens, and deletes documents in the browser.</td>
+      </tr>
+      <tr>
+        <td><code>components/DocumentEditor.tsx</code></td>
+        <td><code>hooks/useDebouncedCallback.ts</code>, <code>hooks/useSocket.ts</code>, <code>lib/offline-db.ts</code>, <code>lib/client-api.ts</code>, <code>lib/conflicts.ts</code>, side panels</td>
+        <td>Main feature component for editing, autosave, manual save, offline queue, realtime updates, and conflicts.</td>
+      </tr>
+      <tr>
+        <td><code>components/EditorTools.tsx</code></td>
+        <td><code>lib/text.ts</code>, parent callbacks from <code>DocumentEditor</code></td>
+        <td>Displays formatting buttons, stats, preview, and find/replace UI.</td>
+      </tr>
+      <tr>
+        <td><code>components/CollaboratorsPanel.tsx</code></td>
+        <td><code>/api/documents/[id]/collaborators</code>, <code>lib/client-api.ts</code>, <code>components/ConfirmDialog.tsx</code></td>
+        <td>Invites or removes collaborators and updates collaborator list in editor state.</td>
+      </tr>
+      <tr>
+        <td><code>components/VersionHistory.tsx</code></td>
+        <td><code>/api/documents/[id]/versions</code>, <code>/restore</code>, <code>lib/client-api.ts</code>, <code>components/ConfirmDialog.tsx</code></td>
+        <td>Loads version list and restores selected versions.</td>
+      </tr>
+      <tr>
+        <td><code>hooks/useSocket.ts</code></td>
+        <td><code>server.js</code></td>
+        <td>Connects browser to Socket.IO endpoint and exposes update/presence listeners.</td>
+      </tr>
+      <tr>
+        <td><code>server.js</code></td>
+        <td><code>hooks/useSocket.ts</code>, browser clients</td>
+        <td>Runs realtime rooms, validates socket room/payload/rate limits, broadcasts updates and presence.</td>
+      </tr>
+      <tr>
+        <td><code>lib/permissions.ts</code></td>
+        <td><code>models/Document.ts</code>, <code>lib/mongodb.ts</code>, <code>types/index.ts</code></td>
+        <td>Central document access and role logic used by pages and APIs.</td>
+      </tr>
+      <tr>
+        <td><code>lib/serializers.ts</code></td>
+        <td><code>lib/permissions.ts</code></td>
+        <td>Converts Mongoose documents into safe JSON shape for clients.</td>
+      </tr>
+      <tr>
+        <td><code>lib/security.ts</code></td>
+        <td>API routes</td>
+        <td>Shared rate limiting, body size limiting, JSON reading, and HTML sanitization.</td>
+      </tr>
+      <tr>
+        <td><code>public/sw.js</code></td>
+        <td><code>components/ServiceWorkerRegister.tsx</code>, <code>public/offline-document.html</code></td>
+        <td>Caches offline fallback page for document routes when navigation fails.</td>
+      </tr>
+    </table>
+
+    <h2>9. Database Model Logic</h2>
+    <h3><code>models/User.ts</code></h3>
+    <p>
+      Stores user name, unique lowercase email, hashed password, avatar URL, last login field, and
+      timestamps. Used by registration, login, and collaborator invitation.
+    </p>
+    <h3><code>models/Document.ts</code></h3>
+    <p>
+      Stores title, HTML content, owner user reference, collaborator subdocuments, last editor,
+      last saved time, revision number, and timestamps. Collaborators have a user reference, role
+      of <code>OWNER</code>, <code>EDITOR</code>, or <code>VIEWER</code>, and invited time.
+    </p>
+    <h3><code>models/Version.ts</code></h3>
+    <p>
+      Stores document reference, title snapshot, content snapshot, label, creator reference, and
+      timestamps. Used for initial document version, autosave snapshots, manual saves, and restore
+      history.
+    </p>
+
+    <h2>10. Authentication Flow</h2>
+    <div class="flow">Register:
+AuthForm -> POST /api/auth/register
+  -> enforceRateLimit + readLimitedJson
+  -> RegisterSchema
+  -> connectDB
+  -> User.findOne duplicate check
+  -> hashPassword
+  -> User.create
+  -> AuthForm calls signIn("credentials")
+
+Login:
+AuthForm -> signIn("credentials")
+  -> /api/auth/[...nextauth]
+  -> lib/auth.ts authorize()
+  -> connectDB -> User.findOne -> bcrypt.compare
+  -> JWT callback stores token.id
+  -> session callback exposes session.user.id</div>
+    <p>
+      Protected pages are guarded twice: <code>proxy.ts</code> redirects unauthenticated users at
+      the route level, and server pages call <code>requireUser()</code> before reading private data.
+      API routes call <code>requireApiUser()</code> and return <code>401 Unauthorized</code> when no
+      session exists.
+    </p>
+
+    <h2>11. Dashboard Flow</h2>
+    <div class="flow">/dashboard page
+  -> requireUser()
+  -> connectDB()
+  -> Document.find(collaboratorQuery(user.id))
+  -> populate owner/collaborators/lastEditedBy
+  -> serializeDocument(document, user.id)
+  -> DashboardClient
+
+DashboardClient actions:
+  create -> POST /api/documents -> router.push(/documents/[id])
+  search -> local title/plain-text filtering
+  delete -> DELETE /api/documents/[id] with optimistic UI rollback on failure</div>
+
+    <h2>12. Editor Flow</h2>
+    <div class="flow">/documents/[id] page
+  -> requireUser()
+  -> getAccessibleDocument(id, user.id)
+  -> populate related users
+  -> serializeDocument()
+  -> DocumentEditor
+
+DocumentEditor:
+  state = title/content/document/saveStatus/online/conflict/presence
+  title input -> debouncedSave
+  rich editor input -> syncRichEditor -> socket live emit + debouncedSave
+  manual save -> saveNow(..., createVersion=true)
+  side panels -> collaborators and versions
+  canEdit = OWNER or EDITOR; VIEWER cannot edit</div>
+
+    <h2>13. Save, Autosave, And Version Flow</h2>
+    <ol>
+      <li>User types in the contenteditable editor.</li>
+      <li><code>syncRichEditor()</code> reads <code>editorRef.current.innerHTML</code>.</li>
+      <li>Local state is updated and Socket.IO broadcasts a live update.</li>
+      <li><code>useDebouncedCallback</code> delays the API save by 900ms.</li>
+      <li><code>saveNow()</code> caches the document in IndexedDB before trying the network.</li>
+      <li>If online, it calls <code>PATCH /api/documents/[id]</code>.</li>
+      <li>The API validates, sanitizes, checks permission and revision, increments revision, and saves.</li>
+      <li>A version is created for first save, every third saved change, or explicit manual save.</li>
+    </ol>
+
+    <h2>14. Realtime Collaboration Flow</h2>
+    <div class="flow">Client A opens document
+  -> useSocket connects to /api/socket
+  -> emits document:join with documentId and user
+  -> server.js joins room and broadcasts presence
+
+Client A edits
+  -> DocumentEditor emits document:update
+  -> server.js validates room, rate, payload size, and sanitizes content
+  -> server broadcasts update to other clients in same document room
+  -> Client B receives update, refreshes title/content/revision, shows toast</div>
+    <p>
+      The realtime layer is for broadcasting live changes and presence. Database persistence still
+      goes through the normal authenticated API routes, which keeps permission checks and validation
+      centralized.
+    </p>
+
+    <h2>15. Offline And Sync Flow</h2>
+    <div class="flow">Online editor:
+  -> DocumentEditor caches latest document in Dexie documents table
+
+If browser is offline:
+  -> saveNow detects !navigator.onLine
+  -> enqueueSave stores operation in Dexie queue table
+  -> UI shows queued/offline status
+
+When browser returns online:
+  -> online event calls syncQueue()
+  -> queued saves PATCH /api/documents/[id]
+  -> success deletes queue item
+  -> conflict attempts merge with mergeDocumentContent()
+  -> retry delay uses exponential backoff up to 60s</div>
+    <p>
+      The service worker in <code>public/sw.js</code> provides a fallback page for
+      <code>/documents/[id]</code> navigation when the network fails. The fallback page reads and
+      writes the same IndexedDB database, so the user can still queue a save outside the full React
+      app shell.
+    </p>
+
+    <h2>16. Conflict Resolution Flow</h2>
+    <div class="flow">Client sends baseRevision
+  -> API compares baseRevision with current document.revision
+  -> if baseRevision is stale and force is false:
+       return 409 conflict with serverDocument and clientDocument
+
+User choices in DocumentEditor:
+  Keep server version -> replace local state with server document
+  Overwrite with mine -> save client document with force=true
+  Merge both -> mergeDocumentContent(server, client, base) then save with force=true</div>
+    <p>
+      Conflict helpers live in <code>lib/conflicts.ts</code>. The merge function handles easy cases
+      first: if only one side changed from the base, it keeps that side. If both changed, it creates
+      marked server/local sections so no content silently disappears.
+    </p>
+
+    <h2>17. Role And Permission Rules</h2>
+    <table>
+      <tr>
+        <th>Role</th>
+        <th>Can View</th>
+        <th>Can Edit</th>
+        <th>Can Manage Collaborators</th>
+        <th>Can Delete</th>
+      </tr>
+      <tr>
+        <td><code>OWNER</code></td>
+        <td>Yes</td>
+        <td>Yes</td>
+        <td>Yes</td>
+        <td>Yes</td>
+      </tr>
+      <tr>
+        <td><code>EDITOR</code></td>
+        <td>Yes</td>
+        <td>Yes</td>
+        <td>No</td>
+        <td>No</td>
+      </tr>
+      <tr>
+        <td><code>VIEWER</code></td>
+        <td>Yes</td>
+        <td>No</td>
+        <td>No</td>
+        <td>No</td>
+      </tr>
+    </table>
+    <p>
+      These rules are centralized in <code>lib/permissions.ts</code>. UI components also respect
+      them, but the important enforcement is server-side in page loaders and API routes.
+    </p>
+
+    <h2>18. Security And Data Safety</h2>
+    <ul>
+      <li><code>proxy.ts</code> blocks protected pages for users without JWT token.</li>
+      <li><code>requireUser()</code> and <code>requireApiUser()</code> protect server reads and API writes.</li>
+      <li>Zod schemas validate auth, document, update, invite, and remove collaborator payloads.</li>
+      <li><code>readLimitedJson()</code> rejects oversized request bodies.</li>
+      <li><code>enforceRateLimit()</code> applies in-memory rate limits per endpoint scope.</li>
+      <li><code>sanitizeDocumentHtml()</code> strips risky tags, event handlers, inline styles, and dangerous URLs.</li>
+      <li>Socket payloads are size-limited, rate-limited, room-checked, and sanitized.</li>
+      <li>Password storage uses bcrypt hashes, not plain text.</li>
+    </ul>
+
+    <h2>19. Environment Variables</h2>
+    <table>
+      <tr>
+        <th>Variable</th>
+        <th>Used By</th>
+        <th>Purpose</th>
+      </tr>
+      <tr>
+        <td><code>MONGODB_URI</code></td>
+        <td><code>lib/mongodb.ts</code></td>
+        <td>MongoDB connection string.</td>
+      </tr>
+      <tr>
+        <td><code>AUTH_SECRET</code></td>
+        <td><code>lib/auth.ts</code>, <code>proxy.ts</code></td>
+        <td>JWT/session signing secret.</td>
+      </tr>
+      <tr>
+        <td><code>NEXT_PUBLIC_APP_URL</code> / <code>NEXTAUTH_URL</code></td>
+        <td><code>server.js</code>, collaborator API</td>
+        <td>Socket CORS origin and invite document links.</td>
+      </tr>
+      <tr>
+        <td><code>SMTP_HOST</code>, <code>SMTP_PORT</code>, <code>SMTP_USER</code>, <code>SMTP_PASS</code>, <code>SMTP_FROM</code></td>
+        <td><code>lib/email.ts</code></td>
+        <td>Optional SMTP settings for invite emails.</td>
+      </tr>
+      <tr>
+        <td><code>NEXT_PUBLIC_PROFILE_NAME</code>, <code>NEXT_PUBLIC_PROFILE_GITHUB</code>, <code>NEXT_PUBLIC_PROFILE_LINKEDIN</code></td>
+        <td><code>components/Footer.tsx</code></td>
+        <td>Footer profile display.</td>
+      </tr>
+    </table>
+
+    <h2>20. Feature Answer Guide</h2>
+    <div class="callout">
+      <strong>Short project pitch:</strong> I built a local-first collaborative document editor with
+      authentication, document CRUD, rich-text editing, debounced autosave, realtime Socket.IO
+      updates, collaborator roles, offline IndexedDB queueing, conflict handling, and version
+      restore.
+    </div>
+    <table>
+      <tr>
+        <th>Feature</th>
+        <th>How To Explain It</th>
+        <th>Main Files</th>
+      </tr>
+      <tr>
+        <td>Authentication</td>
+        <td>Users register with email/password. Passwords are hashed with bcrypt. NextAuth credentials creates a JWT session and protected routes require that session.</td>
+        <td><code>AuthForm.tsx</code>, <code>register/route.ts</code>, <code>lib/auth.ts</code>, <code>lib/session.ts</code>, <code>proxy.ts</code></td>
+      </tr>
+      <tr>
+        <td>Document CRUD</td>
+        <td>Dashboard loads only documents the user owns or collaborates on. Create and delete go through protected API routes.</td>
+        <td><code>DashboardClient.tsx</code>, <code>app/dashboard/page.tsx</code>, <code>app/api/documents/route.ts</code>, <code>app/api/documents/[id]/route.ts</code></td>
+      </tr>
+      <tr>
+        <td>Rich editor</td>
+        <td>The editor uses a contenteditable area and applies formatting commands for bold, italic, headings, lists, quotes, code, and links. It also has stats, preview, and find/replace.</td>
+        <td><code>DocumentEditor.tsx</code>, <code>EditorTools.tsx</code>, <code>app/globals.css</code></td>
+      </tr>
+      <tr>
+        <td>Autosave</td>
+        <td>Changes are debounced for 900ms before calling the PATCH document API. Manual save creates an explicit version snapshot.</td>
+        <td><code>DocumentEditor.tsx</code>, <code>useDebouncedCallback.ts</code>, <code>app/api/documents/[id]/route.ts</code></td>
+      </tr>
+      <tr>
+        <td>Realtime collaboration</td>
+        <td>Each document has a Socket.IO room. When one user edits, other users in the same room receive updates and presence events.</td>
+        <td><code>server.js</code>, <code>useSocket.ts</code>, <code>DocumentEditor.tsx</code></td>
+      </tr>
+      <tr>
+        <td>Offline support</td>
+        <td>Every document is cached in IndexedDB. If the browser is offline, saves are queued and synced when online again. A service worker provides a fallback offline document page.</td>
+        <td><code>lib/offline-db.ts</code>, <code>DocumentEditor.tsx</code>, <code>public/sw.js</code>, <code>public/offline-document.html</code></td>
+      </tr>
+      <tr>
+        <td>Conflict handling</td>
+        <td>Every save includes a base revision. If the server has a newer revision, the API returns a conflict. The user can keep server, overwrite, or merge both.</td>
+        <td><code>lib/conflicts.ts</code>, <code>app/api/documents/[id]/route.ts</code>, <code>DocumentEditor.tsx</code></td>
+      </tr>
+      <tr>
+        <td>Collaborators</td>
+        <td>Owners can invite registered users as editor or viewer. Roles are enforced both in UI and server APIs. SMTP can send invite emails.</td>
+        <td><code>CollaboratorsPanel.tsx</code>, <code>collaborators/route.ts</code>, <code>lib/permissions.ts</code>, <code>lib/email.ts</code></td>
+      </tr>
+      <tr>
+        <td>Version history</td>
+        <td>The app stores snapshots on create, autosave checkpoints, manual saves, and restores. Editors can restore a prior version and the restore itself becomes a new version.</td>
+        <td><code>VersionHistory.tsx</code>, <code>models/Version.ts</code>, <code>versions/route.ts</code>, <code>restore/route.ts</code></td>
+      </tr>
+    </table>
+
+    <h2>21. Common Interview / Viva Answers</h2>
+    <h3>What is the main idea of this project?</h3>
+    <p>
+      It is a collaborative document editor built with Next.js. It focuses on practical document
+      workflows: secure login, document CRUD, rich editing, collaborator permissions, live updates,
+      offline edits, conflict resolution, and version restore.
+    </p>
+    <h3>How did you protect private documents?</h3>
+    <p>
+      Protected pages are redirected by <code>proxy.ts</code>. Server pages and APIs read the session
+      with <code>lib/session.ts</code>. Document access uses <code>collaboratorQuery()</code> and
+      <code>getAccessibleDocument()</code>, so a user only sees documents where they are owner or
+      collaborator.
+    </p>
+    <h3>How does offline editing work?</h3>
+    <p>
+      The editor caches every document in IndexedDB using Dexie. If the browser is offline or a
+      network request fails, the app stores a queue item with the title, content, base revision, and
+      base content. When the browser is online again, <code>syncQueue()</code> retries those saves.
+    </p>
+    <h3>How are conflicts handled?</h3>
+    <p>
+      Each document has a revision number. The client sends its base revision with each save. If the
+      server revision is newer, the API returns a 409 conflict with both server and client versions.
+      The user can keep server, overwrite server, or merge both using <code>mergeDocumentContent()</code>.
+    </p>
+    <h3>Why use Socket.IO if saves already go to API routes?</h3>
+    <p>
+      Socket.IO is used for realtime communication and presence. API routes are still responsible
+      for persistence, validation, authorization, sanitization, versioning, and conflict checks.
+      This separates live UI feedback from trusted database writes.
+    </p>
+    <h3>What security measures are included?</h3>
+    <p>
+      The project uses hashed passwords, route/session guards, role-based document permissions, Zod
+      validation, body size limits, rate limiting, HTML sanitization, and socket payload checks.
+    </p>
+
+    <h2>22. Test Coverage</h2>
+    <table>
+      <tr>
+        <th>Test File</th>
+        <th>What It Checks</th>
+      </tr>
+      <tr>
+        <td><code>tests/unit/permissions.test.ts</code></td>
+        <td><code>getUserRole()</code> detects owner and collaborator roles from populated objects.</td>
+      </tr>
+      <tr>
+        <td><code>tests/unit/text.test.ts</code></td>
+        <td><code>htmlToPlainText()</code> strips tags, removes scripts, and decodes common HTML entities.</td>
+      </tr>
+      <tr>
+        <td><code>tests/integration/conflicts.test.ts</code></td>
+        <td>Revision conflict detection and merge behavior for server/client/base content.</td>
+      </tr>
+    </table>
+
+    <h2>23. Quick Demo Script</h2>
+    <ol>
+      <li>Run <code>npm run dev</code> and open <code>http://localhost:3000</code>.</li>
+      <li>Register a new account and show that it redirects to the dashboard.</li>
+      <li>Create a document and type content. Explain debounced autosave and manual save.</li>
+      <li>Open another browser/session with another registered user, invite them, and show role behavior.</li>
+      <li>Open the same document in two sessions and show realtime updates/presence.</li>
+      <li>Disconnect network, edit content, reconnect, and show queued sync.</li>
+      <li>Create a manual save, open version history, and restore a previous version.</li>
+    </ol>
+  </body>
+</html>

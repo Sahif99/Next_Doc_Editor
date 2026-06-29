@@ -118,8 +118,8 @@ export function DocumentEditor({
 
       await cacheDocument(nextTitle, nextContent);
 
-      if (!navigator.onLine) {
-        await enqueueSave(nextTitle, nextContent);
+      if (!navigator.onLine || document.id.startsWith("offline-")) {
+        await enqueueSave(nextTitle, nextContent, document.id.startsWith("offline-") ? "local-create" : "offline");
         return true;
       }
 
@@ -148,7 +148,14 @@ export function DocumentEditor({
           return false;
         }
 
-        if (!response.ok) throw new Error(payload.message ?? "Unable to save");
+        if (!response.ok) {
+          if (response.status >= 500) {
+            await enqueueSave(nextTitle, nextContent, "server-unavailable");
+            return true;
+          }
+
+          throw new Error(payload.message ?? "Unable to save");
+        }
         if (!payload.data) throw new Error("Save succeeded but no document was returned");
 
         setDocument(payload.data);

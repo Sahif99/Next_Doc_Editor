@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const CreateDocumentSchema = z.object({
   title: z.string().min(1, "Title is required").max(120).trim(),
+  content: z.string().max(250000).optional(),
 });
 
 export const UpdateDocumentSchema = z.object({

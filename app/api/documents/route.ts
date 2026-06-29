@@ -7,7 +7,7 @@ import Version from "@/models/Version";
 import { CreateDocumentSchema } from "@/validators/document";
 import { collaboratorQuery } from "@/lib/permissions";
 import { serializeDocument } from "@/lib/serializers";
-import { enforceRateLimit, readLimitedJson } from "@/lib/security";
+import { enforceRateLimit, normalizeDocumentInput, readLimitedJson } from "@/lib/security";
 
 export async function GET(request: NextRequest) {
   try {
@@ -68,17 +68,19 @@ export async function POST(request: NextRequest) {
 
     if (!user) return error("Unauthorized", 401);
 
-    const body = await readLimitedJson(request, 12_000);
+    const body = await readLimitedJson(request);
     const parsed = CreateDocumentSchema.safeParse(body);
 
     if (!parsed.success) {
       return error(parsed.error.issues[0]?.message ?? "Invalid input", 422);
     }
+    const normalized = normalizeDocumentInput(parsed.data);
 
     await connectDB();
 
     const document = await Document.create({
-      title: parsed.data.title,
+      title: normalized.title ?? parsed.data.title,
+      content: normalized.content ?? "",
       owner: user.id,
       collaborators: [{ user: user.id, role: "OWNER" }],
       lastEditedBy: user.id,

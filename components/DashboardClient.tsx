@@ -19,7 +19,13 @@ type DocCard = {
   offline?: boolean;
 };
 
-export function DashboardClient({ initialDocuments }: { initialDocuments: DocCard[] }) {
+export function DashboardClient({
+  initialDocuments,
+  offlineMode = false,
+}: {
+  initialDocuments: DocCard[];
+  offlineMode?: boolean;
+}) {
   const router = useRouter();
   const [documents, setDocuments] = useState(initialDocuments);
   const [query, setQuery] = useState("");
@@ -95,10 +101,13 @@ export function DashboardClient({ initialDocuments }: { initialDocuments: DocCar
       await offlineDB.queue.update(item.id, { status: "syncing" });
 
       try {
+        const cached = await offlineDB.documents.get(item.documentId);
+        const titleToSync = cached?.title ?? item.title;
+        const contentToSync = cached?.content ?? item.content;
         const response = await fetch("/api/documents", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ title: item.title }),
+          body: JSON.stringify({ title: titleToSync, content: contentToSync }),
         });
         const payload = await readApiResponse<DocCard>(response);
 
@@ -115,7 +124,7 @@ export function DashboardClient({ initialDocuments }: { initialDocuments: DocCar
           revision: 1,
           updatedAt: new Date().toISOString(),
         });
-        await offlineDB.queue.delete(item.id);
+        await offlineDB.queue.where({ documentId: item.documentId }).delete();
 
         setDocuments((items) =>
           items.map((document) =>
@@ -138,28 +147,39 @@ export function DashboardClient({ initialDocuments }: { initialDocuments: DocCar
   }, []);
 
   useEffect(() => {
-    async function loadOfflineCreates() {
+    async function loadOfflineDocuments() {
+      const cachedDocuments = await offlineDB.documents.toArray();
       const queuedCreates = (await offlineDB.queue.toArray()).filter(
         (item): item is OfflineQueueItem & { id: number } =>
           item.operation === "create" && Boolean(item.id)
       );
+      const queuedCreateIds = new Set(queuedCreates.map((item) => item.documentId));
 
-      if (queuedCreates.length === 0) return;
+      if (cachedDocuments.length === 0 && queuedCreates.length === 0) return;
 
-      const offlineDocuments = await Promise.all(
-        queuedCreates.map(async (item) => {
-          const cached = await offlineDB.documents.get(item.documentId);
-          return {
-            id: item.documentId,
-            title: cached?.title ?? item.title,
-            content: cached?.content ?? "",
-            role: cached?.role ?? "OWNER",
-            updatedAt: cached?.updatedAt ?? item.createdAt,
-            lastSavedAt: cached?.updatedAt ?? item.createdAt,
-            offline: true,
-          } satisfies DocCard;
-        })
-      );
+      const offlineDocuments = cachedDocuments.map((document) => ({
+        id: document.id,
+        title: document.title,
+        content: document.content,
+        role: document.role ?? "VIEWER",
+        updatedAt: document.updatedAt,
+        lastSavedAt: document.updatedAt,
+        offline: queuedCreateIds.has(document.id),
+      } satisfies DocCard));
+
+      for (const item of queuedCreates) {
+        if (offlineDocuments.some((document) => document.id === item.documentId)) continue;
+
+        offlineDocuments.push({
+          id: item.documentId,
+          title: item.title,
+          content: item.content,
+          role: "OWNER",
+          updatedAt: item.createdAt,
+          lastSavedAt: item.createdAt,
+          offline: true,
+        });
+      }
 
       setDocuments((items) => {
         const existingIds = new Set(items.map((item) => item.id));
@@ -170,12 +190,29 @@ export function DashboardClient({ initialDocuments }: { initialDocuments: DocCar
       });
     }
 
-    loadOfflineCreates();
+    loadOfflineDocuments();
     syncOfflineCreates();
 
     window.addEventListener("online", syncOfflineCreates);
     return () => window.removeEventListener("online", syncOfflineCreates);
   }, [syncOfflineCreates]);
+
+  useEffect(() => {
+    async function cacheServerDocuments() {
+      for (const document of initialDocuments) {
+        await offlineDB.documents.put({
+          id: document.id,
+          title: document.title,
+          content: document.content,
+          role: document.role,
+          revision: 1,
+          updatedAt: document.updatedAt,
+        });
+      }
+    }
+
+    cacheServerDocuments();
+  }, [initialDocuments]);
 
   async function createDocument(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -249,6 +286,12 @@ export function DashboardClient({ initialDocuments }: { initialDocuments: DocCar
         onConfirm={() => deleteId && deleteDocument(deleteId)}
       />
 
+      {offlineMode && (
+        <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm font-medium text-amber-900">
+          Server data is unavailable, so this dashboard is using documents saved on this device.
+        </div>
+      )}
+
       <div className="flex flex-col gap-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm md:flex-row md:items-end md:justify-between">
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-blue-600">Dashboard</p>
@@ -309,22 +352,12 @@ export function DashboardClient({ initialDocuments }: { initialDocuments: DocCar
               <p className="mt-4 line-clamp-3 text-sm text-slate-600">
                 {htmlToPlainText(document.content) || "No content yet."}
               </p>
-              {document.offline ? (
-                <button
-                  type="button"
-                  disabled
-                  className="mt-5 inline-flex rounded-full bg-slate-200 px-4 py-2 text-sm font-bold text-slate-500"
-                >
-                  Waiting to sync
-                </button>
-              ) : (
-                <Link
-                  href={`/documents/${document.id}`}
-                  className="mt-5 inline-flex rounded-full bg-slate-950 px-4 py-2 text-sm font-bold text-white"
-                >
-                  Open editor
-                </Link>
-              )}
+              <Link
+                href={`/documents/${document.id}`}
+                className="mt-5 inline-flex rounded-full bg-slate-950 px-4 py-2 text-sm font-bold text-white"
+              >
+                Open editor
+              </Link>
             </article>
           ))}
         </div>

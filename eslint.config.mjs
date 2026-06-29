@@ -25,6 +25,8 @@ const eslintConfig = defineConfig([
     "public/workbox-*.js.map",
     "public/fallback-*.js",
     "public/fallback-*.js.map",
+    "public/worker-*.js",
+    "public/worker-*.js.map",
   ]),
 ]);
 
